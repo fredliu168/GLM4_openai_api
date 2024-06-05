@@ -25,14 +25,11 @@ from transformers import (
     BitsAndBytesConfig
 )
 
-# http://119.91.208.249:10086/project-5/doc-55/
-# https://github.com/TylunasLi/ChatGLM-web-stream-demo
-# https://github.com/NCZkevin/chatglm-web
 DEVICE = "cuda"
 DEVICE_ID = "1"
 CUDA_DEVICE = f"{DEVICE}:{DEVICE_ID}" if DEVICE_ID else DEVICE
-MODEL_DIR = "/home/fred/Documents/llma/model_file/glm-4-9b-chat-1m"
-#MODEL_DIR = "/home/fred/Documents/llma/model_file/glm-4-9b-chat"
+MODEL_DIR = "/home/model_file/glm-4-9b-chat-1m"
+#MODEL_DIR = "/home/model_file/glm-4-9b-chat"
 
 def getLogger(name, file_name, use_formatter=True):
     logger = logging.getLogger(name)
@@ -142,13 +139,6 @@ class ConversationsParams(BaseModel):
     html_entities: Optional[bool] = True
     
 origins = [
-    "http://localhost.tiangolo.com",
-    "https://localhost.tiangolo.com",
-    "http://localhost",
-    "http://localhost:8080",
-    "http://192.168.50.108:10002",
-    "http://192.168.50.108:9003",
-    "http://qzdm.cn:60011",
     "http://localhost:10002"
 ]
 
@@ -287,4 +277,4 @@ def answer_question_stream(arg_dict: dict):
 
 if __name__ == '__main__':
 
-    uvicorn.run(app, host='0.0.0.0', port=9003, workers=1)
+    uvicorn.run(app, host='0.0.0.0', port=8003, workers=1)
