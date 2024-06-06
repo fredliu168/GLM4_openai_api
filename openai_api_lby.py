@@ -10,11 +10,13 @@ from sse_starlette.sse import ServerSentEvent, EventSourceResponse
 import logging
 import sys
 import uuid
-#https://github.com/fredliu168/GLM4_openai_api
+
 # Constants
-MODEL_DIR = "/home/glm-4-9b-chat-1m"
+MODEL_DIR = "/home/lby/llm/model/glm-4-9b-chat-1m"
 MAX_HISTORY = 21
-OUT_MAX_LEN = 8192
+MAX_LENGTH = 8192
+TOP_P = 0.8
+TEMPERATURE = 0.8
 
 # Logger setup
 def get_logger(name: str, file_name: str, use_formatter: bool = True) -> logging.Logger:
@@ -53,11 +55,11 @@ class ChatGLM:
             torch.cuda.empty_cache()
             torch.cuda.ipc_collect()
     
-    def answer(self, query: str, history: List[tuple]) -> (str, List[tuple]):
-        response, history = self.model.chat(self.tokenizer, query, history=history)
+    def answer(self, query: str, history: List[tuple],max_length: int = 81920, top_p: float = 0.9, temperature: float = 0.95) -> (str, List[tuple]):
+        response, history = self.model.chat(self.tokenizer, query, history=history, max_length=max_length, top_p=top_p, temperature=temperature)
         return response, [list(h) for h in history]
 
-    def stream(self, query: str, history: List[tuple], max_length: int = OUT_MAX_LEN, top_p: float = 0.9, temperature: float = 0.95):
+    def stream(self, query: str, history: List[tuple], max_length: int = 81920, top_p: float = 0.9, temperature: float = 0.95):
         size = 0
         response = ""
         for response, history in self.model.stream_chat(self.tokenizer, query, history, max_length=max_length, top_p=top_p, temperature=temperature):
@@ -74,29 +76,12 @@ class ChatGLM:
                             "content": this_response,
                             "function_call": None
                         },
-                        "finish_reason": "",
+                        "finish_reason": "length",
                         "index": 0
                     }
                 ]
-            }
-            
-        yield {
-                "model": "glm4",
-                "id": "chatcmpl-" + str(uuid.uuid4()),
-                "object": "chat.completion.chunk",
-                "choices": [
-                    {
-                        "delta": {
-                            "role": "assistant",
-                            "content": "",
-                            "function_call": None
-                        },
-                        "finish_reason": "stop",
-                        "index": 0
-                    }
-                ]
-            }
-        yield ["DONE"]
+            }       
+        
 
 bot = ChatGLM()
 
@@ -115,36 +100,35 @@ async def completions(arg_dict: Dict[str, Any]):
     def decorate(generator):
         for item in generator:
             yield ServerSentEvent(json.dumps(item, ensure_ascii=False))
-    
-    try:
-        ori_history = []
+        yield ServerSentEvent(data="[DONE]")
+    try:       
+        print(arg_dict)
         messages = arg_dict.get("messages", [])
         text = messages[-1]["content"] if messages else ""
-        history_qa = ()
+        history = []
+        if len(messages)>1:
+            history = messages[:-1]
+            if len(history)>MAX_HISTORY:
+                history = messages[0]+history[-MAX_HISTORY:]      
+         
+        top_p = arg_dict.get("top_p",TOP_P)
+        temperature = arg_dict.get("temperature",TEMPERATURE)
+        max_length = arg_dict.get("max_tokens",MAX_LENGTH)
         
-        for index, message in enumerate(messages[:-1]):
-            if message["role"] == "user":
-                question = message["content"]
-            elif message["role"] == "assistant" and message["role"] == "system":
-                history_qa = (question, message["content"])
-            if index % 2 == 1:
-                ori_history.append(history_qa)
+        if max_length < 1024:
+            max_length = TEMPERATURE
         
-        #logger.info(f"Query - {text}")
-        #if ori_history:
-        #   logger.info(f"History - {ori_history}")
-        
-        history = ori_history[-MAX_HISTORY:]
-        history = [tuple(h) for h in history]
+        if temperature == 0:
+           temperature = 0.1 
         
         if arg_dict.get("stream", False):
-            return EventSourceResponse(decorate(bot.stream(text, history)))
+            return EventSourceResponse(decorate(bot.stream(text, history,top_p = top_p,temperature = temperature,max_length = max_length)))
         else:
             response, history = bot.answer(text, history)
             return {
                 "model": "glm4",
                 "id": str(uuid.uuid4()),
-                "object": "chat.completion.chunk",
+                "object": "chat.completion",
                 "choices": [
                     {
                         "index": 0,
@@ -153,7 +137,7 @@ async def completions(arg_dict: Dict[str, Any]):
                             "content": response,
                             "function_call": None
                         },
-                        "finish_reason": "stop"
+                        "finish_reason": "length"
                     }
                 ]
             }
@@ -162,7 +146,7 @@ async def completions(arg_dict: Dict[str, Any]):
         return {
             "model": "glm4",
             "id": str(uuid.uuid4()),
-            "object": "chat.completion.chunk",
+            "object": "chat.completion",
             "choices": [
                 {
                     "index": 0,
@@ -171,11 +155,11 @@ async def completions(arg_dict: Dict[str, Any]):
                         "content": "",
                         "function_call": None
                     },
-                    "finish_reason": "stop"
+                    "finish_reason": "length"
                 }
             ],
             "msg": str(e)
         }
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=9003, workers=1)
+    uvicorn.run(app, host='0.0.0.0', port=8003, workers=1)
