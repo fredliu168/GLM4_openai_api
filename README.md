@@ -1,5 +1,5 @@
 # GLM4_openai_api
-Glm4 openai api格式接口
+Glm4 openai api格式接口,目前还不支持函数调用
 
 
 /POST http://127.0.0.1:8003/v1/chat/completions
