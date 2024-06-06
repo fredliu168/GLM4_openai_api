@@ -116,7 +116,7 @@ async def completions(arg_dict: Dict[str, Any]):
         max_length = arg_dict.get("max_tokens",MAX_LENGTH)
         
         if max_length < 1024:
-            max_length = TEMPERATURE
+            max_length = MAX_LENGTH
         
         if temperature == 0:
            temperature = 0.1 
