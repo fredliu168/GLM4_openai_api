@@ -15,15 +15,43 @@ Glm4 openai api格式接口
 
 返回：
 ```
-{"id": "chatcmpl-522bc37b-917d-4f5d-947a-4c113017eb2c", "choices": [{"delta": {"content": "", "response": "", "finished": false}}]}
-{"id": "chatcmpl-0238dec6-5c95-485f-88c2-72a8a09169df", "choices": [{"delta": {"content": "你好", "response": "你好", "finished": false}}]}
-{"id": "chatcmpl-c06ddfeb-d4f0-4b22-ba12-d98df7a7bf50", "choices": [{"delta": {"content": "，", "response": "你好，", "finished": false}}]}
-{"id": "chatcmpl-88ed7d58-ac13-41a7-ac5e-54eb48c28186", "choices": [{"delta": {"content": "我是", "response": "你好，我是", "finished": false}}]}
-{"id": "chatcmpl-25d55b09-f583-445b-a2aa-314aa6a7abaa", "choices": [{"delta": {"content": "人工智能", "response": "你好，我是人工智能", "finished": false}}]}
-....
 ["DONE"]
-```
+12:25:36
+{"model": "glm4", "id": "chatcmpl-b86cd623-e83e-474e-94b1-5ae9734f85e0", "object": "chat.completion.chunk", "choices": [{"delta": {"role": "assistant", "content": "", "function_call": null}, "finish_reason": "stop", "index": 0}]}
+12:25:36
+{"model": "glm4", "id": "chatcmpl-9078816b-40f1-4937-839d-508a7fb17f4f", "object": "chat.completion.chunk", "choices": [{"delta": {"role": "assistant", "content": "。", "function_call": null}, "finish_reason": "", "index": 0}]}
+12:25:36
+{"model": "glm4", "id": "chatcmpl-7a9da6ae-85bf-455f-b31c-700a02f5b02c", "object": "chat.completion.chunk", "choices": [{"delta": {"role": "assistant", "content": "和支持", "function_call": null}, "finish_reason": "", "index": 0}]}
+12:25:36
 
+```
+```
+{
+"model":"glm4",
+"stream":false,
+"messages":[
+{"role":"system", "content": "you are a helpful assistant"},
+{"role":"user","content":"你好，介绍一下你自己"}]
+}
+```
+```
+{
+    "model": "glm4",
+    "id": "6860e447-a046-4fcd-b73d-d5cc96f78728",
+    "object": "chat.completion.chunk",
+    "choices": [
+        {
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": "你好，我是人工智能助手智谱清言（ChatGLM），是基于智谱 AI 公司训练的语言模型 GLM-4 模型开发的，我的目标是针对用户的问题和要求提供适当的答复和支持。",
+                "function_call": null
+            },
+            "finish_reason": "stop"
+        }
+    ]
+}
+```
 
 使用4bit量化后，占用显存情况：
 ```
