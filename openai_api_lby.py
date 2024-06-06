@@ -12,7 +12,7 @@ import sys
 import uuid
 
 # Constants
-MODEL_DIR = "/home/lby/llm/model/glm-4-9b-chat-1m"
+MODEL_DIR = "/home/glm-4-9b-chat-1m"
 MAX_HISTORY = 21
 MAX_LENGTH = 8192
 TOP_P = 0.8
